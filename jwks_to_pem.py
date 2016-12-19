@@ -11,14 +11,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 
-arg_parser = argparse.ArgumentParser(
-    description='JWK to PEM conversion tool')
-arg_parser.add_argument('--org',
-                        dest='org',
-                        help='Domain for Okta org',
-                        required=True)
-args = arg_parser.parse_args()
-
 
 def intarr2long(arr):
     return int(''.join(['%02x' % byte for byte in arr]), 16)
@@ -33,19 +25,49 @@ def base64_to_long(data):
     return intarr2long(struct.unpack('%sB' % len(_d), _d))
 
 
+def jwks_to_pem_keys(json_web_keys):
+    pem_keys = []
+    for jwk in json_web_keys['keys']:
+        exponent = base64_to_long(jwk['e'])
+        modulus = base64_to_long(jwk['n'])
+        numbers = RSAPublicNumbers(exponent, modulus)
+        public_key = numbers.public_key(backend=default_backend())
+        pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        pem_keys.append(pem)
+    return pem_keys
+
+
+def show_pems_in_console(json_web_keys, pem_keys):
+    for jwk, pem in zip(json_web_keys['keys'], pem_keys):
+        print("PEM for KID '{}'".format(jwk['kid']))
+        print(pem)
+
+
+def output_pem_keys(json_web_keys, pem_keys):
+    if args.output == 'redis':
+        print("WIP")
+    else:
+        show_pems_in_console(json_web_keys, pem_keys)
+
+
+arg_parser = argparse.ArgumentParser(
+    description='JWK to PEM conversion tool')
+arg_parser.add_argument('--org',
+                        dest='org',
+                        help='Domain for Okta org',
+                        required=True)
+arg_parser.add_argument('--output',
+                        dest='output',
+                        help='Public keys destination',
+                        choices=['console', 'redis'],
+                        required=False)
+args = arg_parser.parse_args()
+
 print('Fetching JWKS from {}'.format(args.org))
-r = requests.get('https://{}/oauth2/v1/keys'.format(args.org))
-jwks = r.json()
 
-for jwk in jwks['keys']:
-    exponent = base64_to_long(jwk['e'])
-    modulus = base64_to_long(jwk['n'])
-    numbers = RSAPublicNumbers(exponent, modulus)
-    public_key = numbers.public_key(backend=default_backend())
-    pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
-
-    print "PEM for KID '{}'".format(jwk['kid'])
-    print pem
+jwks = requests.get('https://{}/oauth2/v1/keys'.format(args.org)).json()
+pems = jwks_to_pem_keys(jwks)
+show_pems_in_console(jwks, pems)
