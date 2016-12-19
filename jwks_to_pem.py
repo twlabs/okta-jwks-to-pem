@@ -3,8 +3,10 @@
 
 import argparse
 import base64
+import os
 import struct
 
+import redis
 import requests
 import six
 from cryptography.hazmat.backends import default_backend
@@ -46,9 +48,16 @@ def show_pems_in_console(json_web_keys, pem_keys):
         print(pem)
 
 
+def store_pems_in_redis(json_web_keys, pem_keys):
+    r = redis.from_url(os.environ.get('redis_url'))
+    for jwk, pem in zip(json_web_keys['keys'], pem_keys):
+        r.hset('okta_public_keys', jwk['kid'], pem)
+    print('Public keys were stored in redis successfully')
+
+
 def output_pem_keys(json_web_keys, pem_keys):
     if args.output == 'redis':
-        print("WIP")
+        store_pems_in_redis(json_web_keys, pem_keys)
     else:
         show_pems_in_console(json_web_keys, pem_keys)
 
@@ -61,7 +70,9 @@ arg_parser.add_argument('--org',
                         required=True)
 arg_parser.add_argument('--output',
                         dest='output',
-                        help='Public keys destination',
+                        help='Public keys destination. Default option is console.'
+                             'It is needed an env variable redis_url '
+                             'to store the pem keys in redis',
                         choices=['console', 'redis'],
                         required=False)
 args = arg_parser.parse_args()
@@ -70,4 +81,4 @@ print('Fetching JWKS from {}'.format(args.org))
 
 jwks = requests.get('https://{}/oauth2/v1/keys'.format(args.org)).json()
 pems = jwks_to_pem_keys(jwks)
-show_pems_in_console(jwks, pems)
+output_pem_keys(jwks, pems)
