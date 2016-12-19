@@ -1,24 +1,23 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i python -p python27Packages.cryptography
-# This is, essentially, the reverse of "jwks_to_pem.py".
+# This is, essentially, the reverse of 'jwks_to_pem.py'.
 # Given a PEM encoded public key, it will extract the modulus and exponent
 # from the key and return JWKS formatted JSON
-
-input_key = ""
-
-import struct
-import base64
 import argparse
+import base64
 import fileinput
+import json
+import struct
 import sys
 
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
+input_key = ''
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--kid',
-                    default="example",
+                    default='example',
                     help='JWK Key ID to include in output.')
 parser.add_argument('key',
                     metavar='FILE',
@@ -50,7 +49,7 @@ def long_to_base64(n):
     if not len(data):
         data = '\x00'
     s = base64.urlsafe_b64encode(data).rstrip(b'=')
-    return s.decode("ascii")
+    return s.decode('ascii')
 
 
 pem_data = input_key
@@ -62,16 +61,11 @@ public_numbers = public_key.public_numbers()
 
 jwk = {
     "alg": "RS256",
-    "e": None,
-    "n": None,
+    "e": long_to_base64(public_numbers.e),
+    "n": long_to_base64(public_numbers.n),
     "kid": args.kid,
     "kty": "RSA",
     "use": "sig"
 }
 
-jwk['n'] = long_to_base64(public_numbers.n)
-jwk['e'] = long_to_base64(public_numbers.e)
-
-import json
-
-print json.dumps(jwk)
+print(json.dumps(jwk))

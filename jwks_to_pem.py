@@ -3,13 +3,13 @@
 
 import argparse
 import base64
-import six
 import struct
 
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+import requests
+import six
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-import requests
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 
 arg_parser = argparse.ArgumentParser(
     description='JWK to PEM conversion tool')
@@ -19,21 +19,22 @@ arg_parser.add_argument('--org',
                         required=True)
 args = arg_parser.parse_args()
 
+
 def intarr2long(arr):
-    return int(''.join(["%02x" % byte for byte in arr]), 16)
+    return int(''.join(['%02x' % byte for byte in arr]), 16)
 
 
 def base64_to_long(data):
     if isinstance(data, six.text_type):
-        data = data.encode("ascii")
+        data = data.encode('ascii')
 
     # urlsafe_b64decode will happily convert b64encoded data
     _d = base64.urlsafe_b64decode(bytes(data) + b'==')
     return intarr2long(struct.unpack('%sB' % len(_d), _d))
 
 
-print("Fetching JWKS from {}".format(args.org))
-r = requests.get("https://{}/oauth2/v1/keys".format(args.org))
+print('Fetching JWKS from {}'.format(args.org))
+r = requests.get('https://{}/oauth2/v1/keys'.format(args.org))
 jwks = r.json()
 
 for jwk in jwks['keys']:
