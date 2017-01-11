@@ -54,22 +54,23 @@ def output_pem_keys(json_web_keys, pem_keys):
         redis_store.save_pem_keys(args.redis_url, json_web_keys, pem_keys)
 
 
-arg_parser = argparse.ArgumentParser(
-    description='JWK to PEM conversion tool')
-arg_parser.add_argument('--org',
-                        dest='org',
-                        help='Domain for Okta org',
-                        required=True)
-arg_parser.add_argument('--redis',
-                        dest='redis_url',
-                        help='Redis url. '
-                             'Set the redis url to store the Okta public '
-                             'keys.',
-                        required=False)
-args = arg_parser.parse_args()
+if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser(
+        description='JWK to PEM conversion tool')
+    arg_parser.add_argument('--org',
+                            dest='org',
+                            help='Domain for Okta org',
+                            required=True)
+    arg_parser.add_argument('--redis',
+                            dest='redis_url',
+                            help='Redis url. '
+                                 'Set the redis url to store the Okta public '
+                                 'keys.',
+                            required=False)
+    args = arg_parser.parse_args()
 
-print('Fetching JWKS from {}'.format(args.org))
+    print('Fetching JWKS from {}'.format(args.org))
 
-jwks = requests.get('https://{}/oauth2/v1/keys'.format(args.org)).json()
-pems = jwks_to_pem_keys(jwks)
-output_pem_keys(jwks, pems)
+    jwks = requests.get('https://{}/oauth2/v1/keys'.format(args.org)).json()
+    pems = jwks_to_pem_keys(jwks)
+    output_pem_keys(jwks, pems)
