@@ -61,10 +61,8 @@ def output_pem_keys(json_web_keys, pem_keys):
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(
         description='JWK to PEM conversion tool')
-    arg_parser.add_argument('--org',
-                            dest='org',
-                            help='Domain for Okta org',
-                            required=True)
+    arg_parser.add_argument('org',
+                            help='Domain for Okta org')
     arg_parser.add_argument('--redis',
                             dest='redis_url',
                             help='Redis url. '
