@@ -63,7 +63,7 @@ if __name__ == '__main__':
         description='JWK to PEM conversion tool')
     arg_parser.add_argument('org',
                             help='Domain for Okta org')
-    arg_parser.add_argument('--redis',
+    arg_parser.add_argument('-r', '--redis',
                             dest='redis_url',
                             help='Redis url. '
                                  'Set the redis url to store the Okta public '
