@@ -48,10 +48,14 @@ def show_pems_in_console(json_web_keys, pem_keys):
         print(pem)
 
 
-def output_pem_keys(json_web_keys, pem_keys):
-    show_pems_in_console(json_web_keys, pem_keys)
+def store_pem_keys(json_web_keys, pem_keys):
     if args.redis_url:
         redis_store.save_pem_keys(args.redis_url, json_web_keys, pem_keys)
+
+
+def output_pem_keys(json_web_keys, pem_keys):
+    show_pems_in_console(json_web_keys, pem_keys)
+    store_pem_keys(json_web_keys, pem_keys)
 
 
 if __name__ == '__main__':
