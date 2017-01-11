@@ -7,7 +7,7 @@ public key, suitable for use in tools like [jwt.io](https://jwt.io)
 Here is an example of using this tool to get the PEM encoded public
 keys for the "example.okta.com" Okta org:
 
-    ./jwks_to_pem.py --org example.okta.com
+    ./jwks_to_pem.py example.okta.com
 
     Fetching JWKS from example.okta.com
     PEM for KID 're7eOFV6SiygSbCyYHGGdERFCJ_EoNpi9Duv0FIxllo'
@@ -116,16 +116,14 @@ Here is how we import the dependencies listed above:
     from cryptography.hazmat.primitives import serialization
     import requests
 
-Next, we set up `ArgumentParser` to handle the `--org` command line
-argument. The `required=true` option will cause `ArgumentParser` to give
-help text if the `--org` argument isn't present.
+Next, we set up `ArgumentParser` to handle the `org` command line
+argument. This positional argument will cause `ArgumentParser` to give
+help text if it isn't present.
 
     arg_parser = argparse.ArgumentParser(
         description='JWK to PEM conversion tool')
-    arg_parser.add_argument('--org',
-                            dest='org',
-                            help='Domain for Okta org',
-                            required=True)
+    arg_parser.add_argument('org',
+                            help='Domain for Okta org')
     args = arg_parser.parse_args()
 
 Next up is the the code that handles the ugly job of decoding and properly padding
