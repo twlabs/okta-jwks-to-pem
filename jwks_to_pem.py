@@ -3,15 +3,15 @@
 
 import argparse
 import base64
-import os
 import struct
 
-import redis
 import requests
 import six
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+
+import redis_store
 
 
 def intarr2long(arr):
@@ -48,18 +48,10 @@ def show_pems_in_console(json_web_keys, pem_keys):
         print(pem)
 
 
-def store_pems_in_redis(json_web_keys, pem_keys):
-    r = redis.from_url(os.environ.get('redis_url'))
-    for jwk, pem in zip(json_web_keys['keys'], pem_keys):
-        r.hset('okta_public_keys', jwk['kid'], pem)
-    print('Public keys were stored in redis successfully')
-
-
 def output_pem_keys(json_web_keys, pem_keys):
-    if args.output == 'redis':
-        store_pems_in_redis(json_web_keys, pem_keys)
-    else:
-        show_pems_in_console(json_web_keys, pem_keys)
+    show_pems_in_console(json_web_keys, pem_keys)
+    if args.redis_url:
+        redis_store.save_pem_keys(args.redis_url, json_web_keys, pem_keys)
 
 
 arg_parser = argparse.ArgumentParser(
@@ -68,12 +60,11 @@ arg_parser.add_argument('--org',
                         dest='org',
                         help='Domain for Okta org',
                         required=True)
-arg_parser.add_argument('--output',
-                        dest='output',
-                        help='Public keys destination. Default option is console.'
-                             'It is needed an env variable redis_url '
-                             'to store the pem keys in redis',
-                        choices=['console', 'redis'],
+arg_parser.add_argument('--redis',
+                        dest='redis_url',
+                        help='Redis url. '
+                             'Set the redis url to store the Okta public '
+                             'keys.',
                         required=False)
 args = arg_parser.parse_args()
 
